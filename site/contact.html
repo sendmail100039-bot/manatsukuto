@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>お問い合わせ・無料相談｜MANATSUKUTO</title>
+  <meta name="description" content="MANATSUKUTOへのお問い合わせ・初回60分無料相談。日時が未定の方や相談内容を先に送りたい方はこちらからご連絡ください。">
+  <meta name="theme-color" content="#183d36">
+  <link rel="stylesheet" href="assets/styles.css"><script src="assets/site-config.js" defer></script><script src="assets/main.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">本文へ移動</a>
+  <header class="site-header" data-header><div class="container header-inner"><a class="brand" href="index.html" aria-label="MANATSUKUTO ホーム"><span class="brand-name">MANATSUKUTO</span><span class="brand-reading">マナツクト</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="global-nav" data-nav-toggle><span class="sr-only">メニューを開く</span><span></span><span></span><span></span></button><nav class="global-nav" id="global-nav" aria-label="メインメニュー" data-nav><a href="index.html#services">サービス</a><a href="index.html#area">対応地域</a><a href="staff.html">担当者紹介</a><a href="index.html#faq">よくある質問</a><a class="nav-cta" aria-current="page" href="contact.html">無料相談</a></nav></div></header>
+  <main id="main">
+    <section class="page-hero page-hero-contact"><div class="container page-hero-inner reveal"><p class="section-kicker">CONTACT</p><h1>お問い合わせ・無料相談</h1><p>日時がまだ決まっていない方や、相談内容を先に伝えたい方は、分かる範囲でご入力ください。</p></div></section>
+    <section class="section contact-section">
+      <div class="container contact-layout">
+        <div class="contact-intro reveal">
+          <p class="section-kicker">FIRST CONSULTATION</p><h2>初回相談は60分無料です</h2>
+          <p>困りごとや目的を整理し、対応できる内容と次の進め方をご案内します。制作・設定・自動化作業、成果物の納品、成果保証、交通費は無料相談に含みません。</p>
+          <div class="contact-route"><h3>日時を先に決めたい方</h3><p>平日10:00〜18:00の空き枠から選べます。</p><a class="text-link" data-booking-link href="https://calendar.app.google/Xd9vDivzvxCx7pxJ6">Google Calendarで予約する <span aria-hidden="true">↗</span></a></div>
+          <div class="safety-box"><strong>入力しないでください</strong><p>パスワード、カード番号、秘密鍵、機密情報、実際の業務データ、健康情報などは送らないでください。</p></div>
+        </div>
+        <div class="form-card reveal">
+          <div class="form-mode-note" data-form-mode-note><strong>メールアプリを使う送信方法です</strong><p>入力後、ご自身のメールアプリで内容を確認してから送信します。このページから第三者のフォームサービスへ情報を保存しません。</p></div>
+          <form id="contact-form" data-contact-form>
+            <div class="field-row">
+              <div class="field"><label for="name">お名前・担当者名 <span>必須</span></label><input id="name" name="name" type="text" autocomplete="name" maxlength="80" required><small>公開名でも構いません。</small></div>
+              <div class="field"><label for="email">返信先メール <span>必須</span></label><input id="email" name="email" type="email" autocomplete="email" maxlength="160" required></div>
+            </div>
+            <fieldset class="field"><legend>ご相談者 <span>必須</span></legend><div class="choice-row"><label><input type="radio" name="customerType" value="個人" required> 個人</label><label><input type="radio" name="customerType" value="事業者"> 事業者</label></div></fieldset>
+            <div class="field"><label for="consultType">相談の種類 <span>必須</span></label><select id="consultType" name="consultType" required><option value="">選択してください</option><option>学ぶ：AI・デジタルをはじめたい</option><option>つくる：文章・資料・画像をつくりたい</option><option>整える：仕事や作業を整理したい</option><option>まだ分からない：相談しながら整理したい</option></select></div>
+            <div class="field"><label for="message">相談内容 <span>必須</span></label><textarea id="message" name="message" rows="7" minlength="10" maxlength="2000" required placeholder="今困っていること、つくりたいもの、試してみたいことなどを、分かる範囲でご記入ください。"></textarea><small><span data-count>0</span> / 2000文字</small></div>
+            <div class="field-row">
+              <div class="field"><label for="preferredDate">希望日時 <em>任意</em></label><input id="preferredDate" name="preferredDate" type="text" maxlength="120" placeholder="例：平日14時以降、8月20日午前"></div>
+              <div class="field"><label for="method">希望する相談方法 <em>任意</em></label><select id="method" name="method"><option value="">相談して決めたい</option><option>対面を希望</option><option>オンラインを希望</option></select></div>
+            </div>
+            <label class="consent"><input type="checkbox" name="consent" required><span><a href="privacy.html" target="_blank" rel="noopener">個人情報の取り扱い</a>を確認し、日程調整と連絡のために入力内容を利用することに同意します。 <strong>必須</strong></span></label>
+            <button class="button button-primary submit-button" type="submit" data-submit-button>メールアプリで送信内容を確認 <span aria-hidden="true">→</span></button>
+            <p class="form-status" role="status" aria-live="polite" data-form-status></p>
+            <p class="form-fallback">メールアプリが開かない場合は、<a data-email-link href="mailto:nishioka.ai.solutions@gmail.com">nishioka.ai.solutions@gmail.com</a> へ直接ご連絡ください。</p>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer"><div class="container footer-grid"><div><a class="brand footer-brand" href="index.html"><span class="brand-name">MANATSUKUTO</span><span class="brand-reading">マナツクト</span></a><p>AI・デジタル総合支援</p></div><div><p class="footer-label">CONTACT</p><a data-email-link href="mailto:nishioka.ai.solutions@gmail.com">nishioka.ai.solutions@gmail.com</a></div><nav aria-label="フッターメニュー"><a href="index.html#services">サービス</a><a href="staff.html">担当者紹介</a><a href="contact.html">お問い合わせ</a><a href="privacy.html">プライバシー</a></nav></div><div class="container footer-bottom"><p>姫路市を中心に兵庫県内で対面対応</p><p>© <span data-year></span> MANATSUKUTO</p></div></footer>
+</body>
+</html>

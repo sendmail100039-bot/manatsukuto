@@ -1,0 +1,9 @@
+# Internal planning and source-audit documents stay local.
+/*.md
+!/README.md
+
+# Local scratch and generated test output.
+/tmp/
+/.qa-output/
+/.DS_Store
+Thumbs.db
