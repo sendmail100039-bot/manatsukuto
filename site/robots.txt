@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://sendmail100039-bot.github.io/manatsukuto/sitemap.xml
