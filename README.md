@@ -6,6 +6,7 @@ MANATSUKUTO（マナツクト）公式Webサイトの公開用ソースです。
 
 - `site/` — GitHub Pagesへ公開する静的サイト
 - `.github/workflows/pages.yml` — GitHub Pagesの公開ワークフロー
+- `docs/HANDOFF.md` — プロジェクト引き継ぎ書（現状と残タスク）
 
 ## Local preview
 
