@@ -25,6 +25,7 @@
 | [`03-operations.md`](03-operations.md) | 運営手順（当日運用、規約上の注意、実績ゼロからの立ち上げ計画、価格改定の基準、トラブル対応） |
 | [`04-templates.md`](04-templates.md) | 定型文テンプレート（事前アンケート、開始前案内、当日、フォロー、評価依頼、お断り文面） |
 | [`05-registration-checklist.md`](05-registration-checklist.md) | 出品登録シート（フォームの入力順に、確定した値を上から貼るだけ） |
+| [`06-rehearsal-agreement.md`](06-rehearsal-agreement.md) | 出品前のリハーサル研修一式（取り決め書、実施記録、カリキュラム改訂記録、受講後アンケート） |
 
 ## 使い方
 
