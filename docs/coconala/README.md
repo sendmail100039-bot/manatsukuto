@@ -24,13 +24,15 @@
 | [`02-curriculum.md`](02-curriculum.md) | 全3コマの進行台本（分単位の流れ、到達点、宿題、画面共有で見せるもの） |
 | [`03-operations.md`](03-operations.md) | 運営手順（当日運用、規約上の注意、実績ゼロからの立ち上げ計画、価格改定の基準、トラブル対応） |
 | [`04-templates.md`](04-templates.md) | 定型文テンプレート（事前アンケート、開始前案内、当日、フォロー、評価依頼、お断り文面） |
+| [`05-registration-checklist.md`](05-registration-checklist.md) | 出品登録シート（フォームの入力順に、確定した値を上から貼るだけ） |
 
 ## 使い方
 
-1. `01-service-listing.md` のタイトル案から1つ選び、出品画面に入力する
-2. `03-operations.md` の「立ち上げ計画」に沿って、まず価格を立ち上げ期の設定にする
+1. **登録するとき**は `05-registration-checklist.md` を開き、上から順に貼っていく（案の絞り込み済み）
+2. 判断の根拠や別案を見たいときだけ `01-service-listing.md` を参照する
 3. 購入が入ったら `04-templates.md` の定型文で事前アンケートを送る
 4. 当日は `02-curriculum.md` を手元に開いたまま進行する
+5. 運営上の判断（値上げ、トラブル対応、断り方）は `03-operations.md` を見る
 
 ## 注意
 
