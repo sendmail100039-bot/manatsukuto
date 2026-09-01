@@ -6,6 +6,7 @@ MANATSUKUTO（マナツクト）公式Webサイトの公開用ソースです。
 
 - `site/` — GitHub Pagesへ公開する静的サイト
 - `.github/workflows/pages.yml` — GitHub Pagesの公開ワークフロー
+- `docs/coconala/` — ココナラ出品（AI活用レッスン）の原稿・進行台本・運営手順
 
 ## Local preview
 
