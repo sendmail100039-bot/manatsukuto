@@ -7,3 +7,22 @@
 /.qa-output/
 /.DS_Store
 Thumbs.db
+
+# Node / monorepo
+node_modules/
+.pnpm-store/
+*.tsbuildinfo
+.next/
+out/
+dist/
+coverage/
+
+# Secrets & local config (never commit)
+.env
+.env.*
+!.env.example
+
+# Backups and runtime data
+backups/
+logs/
+*.log

@@ -1,0 +1,35 @@
+{
+  "name": "company-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GPS機能付き出退勤システム・共通業務プラットフォーム (modular monolith)",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @platform/web dev",
+    "build": "pnpm --filter @platform/web build",
+    "start": "pnpm --filter @platform/web start",
+    "worker": "pnpm --filter @platform/worker start",
+    "typecheck": "tsc -p tsconfig.json --noEmit && pnpm --filter @platform/web typecheck",
+    "test": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:all": "vitest run",
+    "db:generate": "pnpm --filter @platform/database generate",
+    "db:migrate": "pnpm --filter @platform/database migrate",
+    "db:seed": "pnpm --filter @platform/database seed",
+    "db:setup": "pnpm db:migrate && pnpm db:seed",
+    "lint": "eslint . --ext .ts,.tsx",
+    "site:preview": "python -m http.server 4173 --directory site"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "dotenv": "^17.4.2",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0",
+    "drizzle-orm": "^0.45.2",
+    "postgres": "^3.4.9"
+  }
+}
