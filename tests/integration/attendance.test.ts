@@ -248,7 +248,7 @@ describe("log protection (§35)", () => {
   it("audit_logs cannot be updated or deleted", async () => {
     expect(await rootMessage(t.db.execute(sql`update audit_logs set action = 'x' where id = (select min(id) from audit_logs)`))).toMatch(/append-only/);
     expect(await rootMessage(t.db.execute(sql`delete from audit_logs`))).toMatch(/append-only/);
-    const [{ n }] = (await t.db.execute(sql`select count(*)::int as n from audit_logs`)) as unknown as { n: number }[];
+    const [{ n } = { n: 0 }] = (await t.db.execute(sql`select count(*)::int as n from audit_logs`)) as unknown as { n: number }[];
     expect(n).toBeGreaterThan(5);
   });
   it("attendance_events cannot be altered", async () => {

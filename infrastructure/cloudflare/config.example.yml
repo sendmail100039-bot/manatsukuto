@@ -1,0 +1,16 @@
+# Cloudflare Tunnel (free) - exposes the Windows server over HTTPS without opening inbound ports.
+# 1. Install cloudflared on the Windows server (winget install Cloudflare.cloudflared)
+# 2. cloudflared tunnel login && cloudflared tunnel create kintai
+# 3. Copy this file to %USERPROFILE%\.cloudflared\config.yml and edit tunnel / credentials-file
+# 4. cloudflared tunnel route dns kintai kintai.example.com
+# 5. cloudflared service install   (runs as a Windows service)
+tunnel: <TUNNEL-UUID>
+credentials-file: C:\Users\<user>\.cloudflared\<TUNNEL-UUID>.json
+
+ingress:
+  - hostname: kintai.example.com
+    service: http://127.0.0.1:3000
+    originRequest:
+      noTLSVerify: false
+      httpHostHeader: kintai.example.com
+  - service: http_status:404
