@@ -27,6 +27,16 @@ PostgreSQL 16 / Drizzle ORM。スキーマの正本は `packages/database/src/sc
 | `attendance_requests` | 打刻修正申請(時刻修正 / 打刻追加 / 記録取消) |
 | `attendance_approvals` | 承認・却下。承認者、コメント、**元レコードのスナップショット**、新レコードID |
 
+### Shift / Leave (Phase 2)
+| テーブル | 役割 |
+| --- | --- |
+| `shift_patterns` | 勤務時間帯パターン(早番・日勤・遅番・夜勤。終了が開始以前なら翌日) |
+| `shifts` | 職員×勤務日のシフト(1 日 1 件、planned → published、cancelled) |
+| `leave_types` | 休暇種別(有給/無給、付与消費の有無、半休可否) |
+| `leave_balances` | 職員×種別×年度の付与・使用(半日単位の整数) |
+| `leave_requests` / `leave_approvals` | 休暇申請と承認履歴。申請中は残日数を予約扱い |
+| `attendance_breaks` | 休憩(開始/終了打刻に紐づく) |
+
 ### Security
 | テーブル | 役割 |
 | --- | --- |

@@ -531,4 +531,130 @@ export const idempotencyKeys = pgTable(
   (t) => [index("idempotency_keys_expires_idx").on(t.expiresAt)],
 );
 
-export const schemaVersionMarker = sql`1`;
+// ---------------------------------------------------------------------------
+// Shift module (Phase 2)
+// ---------------------------------------------------------------------------
+export const shiftStatusEnum = pgEnum("shift_status", ["planned", "published", "cancelled"]);
+
+export const shiftPatterns = pgTable(
+  "shift_patterns",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").references(() => organizations.id),
+    code: text("code").notNull(),
+    name: text("name").notNull(),
+    /** "HH:mm" in the business time zone */
+    startTime: text("start_time").notNull(),
+    endTime: text("end_time").notNull(),
+    breakMinutes: integer("break_minutes").notNull().default(60),
+    color: text("color"),
+    active: boolean("active").notNull().default(true),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex("shift_patterns_code_idx").on(t.code)],
+);
+
+export const shifts = pgTable(
+  "shifts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    employeeId: uuid("employee_id")
+      .notNull()
+      .references(() => employees.id),
+    workDate: date("work_date").notNull(),
+    patternId: uuid("pattern_id").references(() => shiftPatterns.id),
+    startAt: timestamp("start_at", { withTimezone: true }).notNull(),
+    endAt: timestamp("end_at", { withTimezone: true }).notNull(),
+    breakMinutes: integer("break_minutes").notNull().default(0),
+    locationId: uuid("location_id").references(() => locations.id),
+    status: shiftStatusEnum("status").notNull().default("planned"),
+    note: text("note"),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex("shifts_employee_date_idx").on(t.employeeId, t.workDate), index("shifts_date_idx").on(t.workDate)],
+);
+
+// ---------------------------------------------------------------------------
+// Leave module (Phase 2)
+// ---------------------------------------------------------------------------
+export const leaveRequestStatusEnum = pgEnum("leave_request_status", ["pending", "approved", "rejected", "cancelled"]);
+export const leaveHalfEnum = pgEnum("leave_half", ["am", "pm"]);
+
+export const leaveTypes = pgTable(
+  "leave_types",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    code: text("code").notNull(),
+    name: text("name").notNull(),
+    paid: boolean("paid").notNull().default(true),
+    /** whether requests consume a balance (annual paid leave) or are unlimited (e.g. bereavement) */
+    requiresBalance: boolean("requires_balance").notNull().default(true),
+    allowHalfDay: boolean("allow_half_day").notNull().default(true),
+    active: boolean("active").notNull().default(true),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex("leave_types_code_idx").on(t.code)],
+);
+
+export const leaveBalances = pgTable(
+  "leave_balances",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    employeeId: uuid("employee_id")
+      .notNull()
+      .references(() => employees.id),
+    leaveTypeId: uuid("leave_type_id")
+      .notNull()
+      .references(() => leaveTypes.id),
+    fiscalYear: integer("fiscal_year").notNull(),
+    /** days, half-day granularity stored as 0.5 (stored ×2 as integer to avoid float drift) */
+    grantedHalfDays: integer("granted_half_days").notNull().default(0),
+    usedHalfDays: integer("used_half_days").notNull().default(0),
+    validFrom: date("valid_from"),
+    expiresOn: date("expires_on"),
+    note: text("note"),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex("leave_balances_employee_type_year_idx").on(t.employeeId, t.leaveTypeId, t.fiscalYear)],
+);
+
+export const leaveRequests = pgTable(
+  "leave_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    employeeId: uuid("employee_id")
+      .notNull()
+      .references(() => employees.id),
+    leaveTypeId: uuid("leave_type_id")
+      .notNull()
+      .references(() => leaveTypes.id),
+    balanceId: uuid("balance_id").references(() => leaveBalances.id),
+    startDate: date("start_date").notNull(),
+    endDate: date("end_date").notNull(),
+    half: leaveHalfEnum("half"),
+    halfDays: integer("half_days").notNull(),
+    reason: text("reason"),
+    status: leaveRequestStatusEnum("status").notNull().default("pending"),
+    requestedByUserId: uuid("requested_by_user_id")
+      .notNull()
+      .references(() => users.id),
+    ...timestamps,
+  },
+  (t) => [index("leave_requests_employee_idx").on(t.employeeId, t.status), index("leave_requests_dates_idx").on(t.startDate, t.endDate)],
+);
+
+export const leaveApprovals = pgTable("leave_approvals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  requestId: uuid("request_id")
+    .notNull()
+    .references(() => leaveRequests.id),
+  approverUserId: uuid("approver_user_id")
+    .notNull()
+    .references(() => users.id),
+  decision: approvalDecisionEnum("decision").notNull(),
+  comment: text("comment"),
+  decidedAt: timestamp("decided_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const schemaVersionMarker = sql`2`;

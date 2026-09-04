@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   output: "standalone",
-  transpilePackages: ["@platform/core", "@platform/auth", "@platform/security", "@platform/database", "@platform/attendance", "@platform/ui"],
+  transpilePackages: ["@platform/core", "@platform/auth", "@platform/security", "@platform/database", "@platform/attendance", "@platform/shift", "@platform/leave", "@platform/ui"],
   serverExternalPackages: ["postgres"],
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];

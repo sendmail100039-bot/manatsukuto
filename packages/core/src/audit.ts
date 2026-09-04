@@ -33,6 +33,15 @@ export type AuditAction =
   | "security.gps_viewed"
   | "security.risk_viewed"
   | "security.dashboard_viewed"
+  | "shift.pattern_updated"
+  | "shift.assigned"
+  | "shift.cancelled"
+  | "leave.type_updated"
+  | "leave.balance_granted"
+  | "leave.request_created"
+  | "leave.request_cancelled"
+  | "leave.request_approved"
+  | "leave.request_rejected"
   | "settings.updated";
 
 export interface AuditEntry extends RequestMeta {

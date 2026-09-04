@@ -23,7 +23,8 @@
 apps/web            Next.js 16 (職員・管理者・本部・システム管理の全画面 + JSON API)
 apps/worker         バックアップ / クリーンアップ / ヘルスチェック
 modules/attendance  勤怠モジュール(打刻、記録、修正申請、承認、CSV)
-modules/shift, leave  Phase 2 用の予約ディレクトリ
+modules/shift       シフト管理(パターン、割当、公開、勤怠との突合)
+modules/leave       休暇申請・有休管理(種別、付与、申請、承認、残日数)
 packages/core       共通コア(職員・組織・拠点・端末・権限・監査ログ・設定)
 packages/auth       自前認証(scrypt)、セッション、TOTP MFA、ロックアウト、Origin 検査
 packages/security   GPS 距離計算、拠点判定、Impossible Travel、リスクスコア、Security Event

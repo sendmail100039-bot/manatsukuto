@@ -30,6 +30,16 @@ export const PERMISSIONS = {
   "security.device.read": "打刻端末詳細を閲覧する",
   "security.review": "セキュリティイベントを確認・判定する",
   "security.admin": "セキュリティ設定を管理する",
+  // Shift module
+  "shift.self.read": "自分のシフトを閲覧する",
+  "shift.team.read": "所属職員のシフトを閲覧する",
+  "shift.manage": "シフトを作成・変更する",
+  // Leave module
+  "leave.self.request": "休暇を申請する",
+  "leave.self.read": "自分の休暇残日数・申請を閲覧する",
+  "leave.team.read": "所属職員の休暇を閲覧する",
+  "leave.approve": "休暇申請を承認・却下する",
+  "leave.admin": "休暇種別・付与日数を管理する",
   // System
   "system.settings": "システム設定を変更する",
   "system.audit.read": "監査ログを閲覧する",
@@ -48,7 +58,7 @@ export const ROLES = {
   employee: {
     name: "一般職員",
     description: "出勤・退勤、勤怠履歴、修正申請",
-    permissions: ["attendance.self.punch", "attendance.self.read", "attendance.self.request"],
+    permissions: ["attendance.self.punch", "attendance.self.read", "attendance.self.request", "shift.self.read", "leave.self.request", "leave.self.read"],
   },
   manager: {
     name: "管理者",
@@ -63,6 +73,13 @@ export const ROLES = {
       "core.employee.read",
       "core.location.write",
       "core.device.read",
+      "shift.self.read",
+      "shift.team.read",
+      "shift.manage",
+      "leave.self.request",
+      "leave.self.read",
+      "leave.team.read",
+      "leave.approve",
     ],
   },
   head_office: {
@@ -83,6 +100,14 @@ export const ROLES = {
       "security.location.read",
       "security.device.read",
       "security.review",
+      "shift.self.read",
+      "shift.team.read",
+      "shift.manage",
+      "leave.self.request",
+      "leave.self.read",
+      "leave.team.read",
+      "leave.approve",
+      "leave.admin",
     ],
   },
   security_admin: {
@@ -171,6 +196,10 @@ export const DEFAULT_SETTINGS: Record<string, { value: unknown; description: str
   "auth.lockout": {
     value: { maxFailedAttempts: 5, lockMinutes: 15, ipMaxAttemptsPer15Min: 50 },
     description: "Brute Force 対策 (§46)",
+  },
+  "attendance.evaluation": {
+    value: { lateGraceMinutes: 0, earlyLeaveGraceMinutes: 0, fiscalYearStartMonth: 4 },
+    description: "シフトとの突合(遅刻・早退の猶予分)と年度開始月",
   },
   "attendance.autoRegisterDevice": {
     value: { enabled: true, defaultApproval: "pending" },

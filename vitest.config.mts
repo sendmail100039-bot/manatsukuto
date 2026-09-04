@@ -7,6 +7,8 @@ const alias = {
   "@platform/security": path.resolve(import.meta.dirname, "packages/security/src/index.ts"),
   "@platform/database": path.resolve(import.meta.dirname, "packages/database/src/index.ts"),
   "@platform/attendance": path.resolve(import.meta.dirname, "modules/attendance/src/index.ts"),
+  "@platform/shift": path.resolve(import.meta.dirname, "modules/shift/src/index.ts"),
+  "@platform/leave": path.resolve(import.meta.dirname, "modules/leave/src/index.ts"),
 };
 
 export default defineConfig({

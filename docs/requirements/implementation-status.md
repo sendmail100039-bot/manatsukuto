@@ -38,6 +38,9 @@
 | Auth | Brute Force 対策 / ロックアウト | ✅ | `login_attempts`, `user_credentials.locked_until` |
 | Auth | CSRF / Replay / 重複打刻 | ✅ | Origin 検査、request_id 単回使用、advisory lock、部分ユニーク索引 |
 
+| Shift | シフトパターン、個別/一括登録、公開、週次グリッド、職員向け月表示 | ✅ Phase 2 | `modules/shift`, `/manager/shifts`, `/manager/shift-patterns`, `/shifts` |
+| Shift | 勤怠との突合(遅刻・早退・欠勤・シフト外) | ✅ Phase 2 | `evaluateAttendance`、勤怠一覧の「シフト突合」列、猶予分は設定 `attendance.evaluation` |
+| Leave | 休暇種別、年度別付与(0.5 日単位)、申請、承認、取消、残日数 | ✅ Phase 2 | `modules/leave`, `/leave`, `/manager/leave` |
 | Phase 2 | NFC / Beacon / Device・App Integrity / Wi-Fi 補助判定 | ⛔ 対象外(Web) | ブラウザからは NFC・Beacon・SSID・整合性 API にアクセスできないため、ネイティブアプリ化時に実装 |
 
 凡例: ✅ 実装済 / 🔶 部分実装 / ⛔ 技術的に Web では不可
