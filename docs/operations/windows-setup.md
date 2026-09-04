@@ -2,6 +2,8 @@
 
 対象: Windows Server 2019/2022 または Windows 10/11 Pro。管理者権限の PowerShell で作業します。
 
+チェックリスト形式の手順は [deployment-checklist.md](./deployment-checklist.md) にあります。
+
 ## 1. 必要ソフトウェア
 
 ```powershell
@@ -87,11 +89,10 @@ powershell -File infrastructure\windows\firewall.ps1
 ## 6. 更新手順
 ```powershell
 cd C:\apps\platform
+Stop-ScheduledTask CompanyPlatform-Web; Stop-ScheduledTask CompanyPlatform-Worker
 git pull
-pnpm install --frozen-lockfile
-pnpm db:migrate
-pnpm build
-Restart-ScheduledTask は無いので: Stop-ScheduledTask CompanyPlatform-Web; Start-ScheduledTask CompanyPlatform-Web
+powershell -ExecutionPolicy Bypass -File infrastructure\windows\setup.ps1   # install → migrate → seed(冪等) → build
+Start-ScheduledTask CompanyPlatform-Web; Start-ScheduledTask CompanyPlatform-Worker
 ```
 
 ## 7. Docker Desktop を使う場合

@@ -54,6 +54,15 @@ if ($Demo) { pnpm db:seed -- --demo } else { pnpm db:seed }
 if (-not $SkipBuild) {
   Write-Host "==> build web"
   $env:NODE_ENV = "production"
+  $env:NEXT_TELEMETRY_DISABLED = "1"
   pnpm build
+  if ($LASTEXITCODE -ne 0) { Write-Error "build failed" }
+  # Next.js standalone output does not include static assets; copy them next to server.js.
+  $standalone = "apps\web\.next\standalone\apps\web"
+  New-Item -ItemType Directory -Force -Path "$standalone\.next" | Out-Null
+  Remove-Item -Recurse -Force "$standalone\.next\static" -ErrorAction SilentlyContinue
+  Remove-Item -Recurse -Force "$standalone\public" -ErrorAction SilentlyContinue
+  Copy-Item -Recurse "apps\web\.next\static" "$standalone\.next\static"
+  Copy-Item -Recurse "apps\web\public" "$standalone\public"
 }
 Write-Host "完了。start-web.ps1 / register-tasks.ps1 でサービスを起動・登録してください。"
