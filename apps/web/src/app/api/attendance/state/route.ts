@@ -11,7 +11,7 @@ export async function GET(req: Request) {
   try {
     if (!p.employeeId) return NextResponse.json({ ok: true, clockedIn: false });
     const s = await getPunchState(db(), p.employeeId);
-    return NextResponse.json({ ok: true, clockedIn: s.clockedIn, since: s.open?.record.clockInAt ?? null, location: s.open?.locationName ?? null });
+    return NextResponse.json({ ok: true, clockedIn: s.clockedIn, onBreak: s.onBreak, breakStartedAt: s.breakStartedAt, since: s.open?.record.clockInAt ?? null, location: s.open?.locationName ?? null });
   } catch (err) {
     return handleApiError(err);
   }

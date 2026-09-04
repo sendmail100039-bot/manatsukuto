@@ -1,4 +1,4 @@
-import { listRecords } from "@platform/attendance";
+import { listRecords, workedMinutes } from "@platform/attendance";
 import { formatTime, toWorkDate } from "@platform/core";
 import { db } from "@/lib/db";
 import { requirePermissionPage } from "@/lib/session";
@@ -37,6 +37,8 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
               <th>勤務日</th>
               <th>出勤</th>
               <th>退勤</th>
+              <th>休憩</th>
+              <th>実働</th>
               <th>拠点</th>
               <th>状態</th>
               <th></th>
@@ -45,7 +47,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="muted">
+                <td colSpan={8} className="muted">
                   記録がありません
                 </td>
               </tr>
@@ -55,6 +57,10 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
                   <td>{r.record.workDate}</td>
                   <td>{formatTime(r.record.clockInAt) || "—"}</td>
                   <td>{formatTime(r.record.clockOutAt) || "—"}</td>
+                <td>{r.record.breakMinutes ? `${r.record.breakMinutes}分` : "—"}</td>
+                <td>{workedMinutes(r.record) == null ? "—" : `${Math.floor(workedMinutes(r.record)! / 60)}:${String(workedMinutes(r.record)! % 60).padStart(2, "0")}`}</td>
+                  <td>{r.record.breakMinutes ? `${r.record.breakMinutes}分` : "—"}</td>
+                  <td>{workedMinutes(r.record) == null ? "—" : `${Math.floor(workedMinutes(r.record)! / 60)}:${String(workedMinutes(r.record)! % 60).padStart(2, "0")}`}</td>
                   <td>{r.locationName ?? "—"}</td>
                   <td>
                     {r.record.status === "open" ? <span className="badge badge-warn">出勤中</span> : <span className="badge badge-ok">完了</span>}

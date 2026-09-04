@@ -127,6 +127,14 @@ export const DEFAULT_RISK_SETTINGS = {
     impossibleTravel: 80,
     mockLocation: 100,
     integrityFailed: 60,
+    // Phase 2: heuristics that do not need native APIs
+    gpsStale: 15,
+    positionRepeated: 25,
+    accuracyImplausible: 20,
+    siteCodeMissing: 30,
+    siteCodeInvalid: 40,
+    /** negative: a valid rotating site code is strong evidence of presence */
+    siteCodeVerified: -30,
   },
   thresholds: {
     /** accuracy (meters) above this is treated as poor */
@@ -139,6 +147,12 @@ export const DEFAULT_RISK_SETTINGS = {
     impossibleTravelKmh: 200,
     /** minimum distance to consider for impossible travel (meters) */
     impossibleTravelMinDistanceMeters: 5000,
+    /** GPS fix older than this (seconds) is treated as stale / cached */
+    gpsStaleSeconds: 120,
+    /** POSITION_REPEATED only when the previous punch is at least this old (seconds); phones legitimately reuse a fix for a few minutes */
+    positionRepeatedMinIntervalSeconds: 600,
+    /** accuracy below this (meters) is implausible for a phone and typical of emulators */
+    implausibleAccuracyMeters: 1,
     /** score >= review -> REVIEW, score >= highRisk -> HIGH_RISK */
     review: 30,
     highRisk: 80,

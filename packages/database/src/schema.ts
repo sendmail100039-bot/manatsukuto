@@ -34,7 +34,7 @@ export const employeeStatusEnum = pgEnum("employee_status", ["active", "on_leave
 export const userStatusEnum = pgEnum("user_status", ["active", "locked", "disabled"]);
 export const authMethodEnum = pgEnum("auth_method", ["password", "passkey", "external"]);
 export const deviceApprovalEnum = pgEnum("device_approval", ["pending", "approved", "rejected"]);
-export const attendanceEventTypeEnum = pgEnum("attendance_event_type", ["clock_in", "clock_out"]);
+export const attendanceEventTypeEnum = pgEnum("attendance_event_type", ["clock_in", "clock_out", "break_start", "break_end"]);
 export const attendanceRecordStatusEnum = pgEnum("attendance_record_status", [
   "open",
   "closed",
@@ -113,6 +113,9 @@ export const locations = pgTable(
     validFrom: date("valid_from"),
     validTo: date("valid_to"),
     punchAllowed: boolean("punch_allowed").notNull().default(true),
+    /** Rotating site code (dynamic QR) - encrypted TOTP secret; null = feature disabled for this site. */
+    siteCodeSecret: text("site_code_secret"),
+    siteCodeRequired: boolean("site_code_required").notNull().default(false),
     ...timestamps,
   },
   (t) => [uniqueIndex("locations_code_idx").on(t.code)],
@@ -318,6 +321,7 @@ export const attendanceEvents = pgTable(
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
     requestId: text("request_id").notNull(), // idempotency / replay protection
+    siteCodeVerified: boolean("site_code_verified"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -340,6 +344,7 @@ export const attendanceRecords = pgTable(
     clockInAt: timestamp("clock_in_at", { withTimezone: true }),
     clockOutAt: timestamp("clock_out_at", { withTimezone: true }),
     status: attendanceRecordStatusEnum("status").notNull().default("open"),
+    breakMinutes: integer("break_minutes").notNull().default(0),
     // Version chain: records are never overwritten. A correction creates a new
     // record and marks the previous one as superseded.
     version: integer("version").notNull().default(1),
@@ -349,6 +354,25 @@ export const attendanceRecords = pgTable(
     ...timestamps,
   },
   (t) => [index("attendance_records_employee_date_idx").on(t.employeeId, t.workDate)],
+);
+
+export const attendanceBreaks = pgTable(
+  "attendance_breaks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    recordId: uuid("record_id")
+      .notNull()
+      .references(() => attendanceRecords.id),
+    employeeId: uuid("employee_id")
+      .notNull()
+      .references(() => employees.id),
+    startEventId: uuid("start_event_id").references(() => attendanceEvents.id),
+    endEventId: uuid("end_event_id").references(() => attendanceEvents.id),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("attendance_breaks_record_idx").on(t.recordId)],
 );
 
 export const attendanceRequests = pgTable(

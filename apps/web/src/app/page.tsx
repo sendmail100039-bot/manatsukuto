@@ -1,5 +1,7 @@
 import { getPunchState } from "@platform/attendance";
 import { formatDateTime } from "@platform/core";
+import { isNotNull } from "drizzle-orm";
+import { locations } from "@platform/database";
 import { db } from "@/lib/db";
 import { requireLogin } from "@/lib/session";
 import { AppShell } from "@/components/AppShell";
@@ -11,6 +13,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const p = await requireLogin();
   const { denied } = await searchParams;
   const state = p.employeeId ? await getPunchState(db(), p.employeeId) : null;
+  const [siteCodeSite] = await db().select({ id: locations.id }).from(locations).where(isNotNull(locations.siteCodeSecret)).limit(1);
   return (
     <AppShell principal={p}>
       {denied ? <div className="alert alert-error">その画面を表示する権限がありません。</div> : null}
@@ -21,6 +24,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       ) : (
         <PunchPanel
           initialClockedIn={state!.clockedIn}
+          initialOnBreak={state!.onBreak}
+          siteCodeEnabled={!!siteCodeSite}
           initialSince={state!.open?.record.clockInAt ? formatDateTime(state!.open.record.clockInAt) : null}
           initialLocation={state!.open?.locationName ?? null}
           canPunch={p.permissions.has("attendance.self.punch")}
@@ -36,6 +41,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <dd>{formatDateTime(state.last.record.clockInAt)}</dd>
             <dt>退勤</dt>
             <dd>{formatDateTime(state.last.record.clockOutAt) || "—"}</dd>
+            <dt>休憩</dt>
+            <dd>{state.last.record.breakMinutes} 分</dd>
             <dt>拠点</dt>
             <dd>{state.last.locationName ?? "—"}</dd>
           </dl>

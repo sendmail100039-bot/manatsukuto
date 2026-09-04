@@ -1,4 +1,4 @@
-import { listRecords } from "@platform/attendance";
+import { listRecords, workedMinutes } from "@platform/attendance";
 import { formatTime, listDepartments, toWorkDate } from "@platform/core";
 import { db } from "@/lib/db";
 import { managerScope } from "@/lib/scope";
@@ -64,6 +64,8 @@ export default async function ManagerAttendancePage({ searchParams }: { searchPa
               <th>拠点</th>
               <th>出勤</th>
               <th>退勤</th>
+              <th>休憩</th>
+              <th>実働</th>
               <th>状態</th>
             </tr>
           </thead>
@@ -77,6 +79,8 @@ export default async function ManagerAttendancePage({ searchParams }: { searchPa
                 <td>{r.locationName ?? "—"}</td>
                 <td>{formatTime(r.record.clockInAt) || "—"}</td>
                 <td>{formatTime(r.record.clockOutAt) || "—"}</td>
+                <td>{r.record.breakMinutes ? `${r.record.breakMinutes}分` : "—"}</td>
+                <td>{workedMinutes(r.record) == null ? "—" : `${Math.floor(workedMinutes(r.record)! / 60)}:${String(workedMinutes(r.record)! % 60).padStart(2, "0")}`}</td>
                 <td>
                   {r.record.status === "open" ? <span className="badge badge-warn">出勤中</span> : <span className="badge badge-ok">完了</span>}
                   {r.record.version > 1 ? <span className="badge badge-muted"> v{r.record.version}</span> : null}

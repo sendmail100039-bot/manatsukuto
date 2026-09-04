@@ -31,3 +31,18 @@ export async function saveLocationAction(_prev: ActionState, formData: FormData)
     return { ok: true, message: "保存しました" };
   });
 }
+
+export async function siteCodeAction(formData: FormData): Promise<void> {
+  const p = await requirePermissionPage("core.location.write");
+  const { enableSiteCode, disableSiteCode, setSiteCodeRequired } = await import("@platform/security");
+  const { writeAudit } = await import("@platform/core");
+  const id = str(formData, "id");
+  const op = str(formData, "op");
+  if (op === "enable") await enableSiteCode(db(), id, false);
+  else if (op === "rotate") await enableSiteCode(db(), id, bool(formData, "required"));
+  else if (op === "require") await setSiteCodeRequired(db(), id, true);
+  else if (op === "optional") await setSiteCodeRequired(db(), id, false);
+  else if (op === "disable") await disableSiteCode(db(), id);
+  await writeAudit(db(), { ...(await requestMeta()), actorUserId: p.userId, action: "location.updated", targetType: "location", targetId: id, details: { siteCode: op } });
+  revalidatePath("/manager/locations");
+}

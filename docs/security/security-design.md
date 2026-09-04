@@ -45,7 +45,14 @@
 ## Secret 管理 (§38)
 - `.env` は `.gitignore` 済み。`APP_SECRET`、`DATABASE_URL` 等は環境変数。CI では GitHub Secrets を使用。
 
-## 残課題(Phase 2)
+## Phase 2 で追加した判定
+- **GPS_STALE**: 端末が返した位置情報の取得時刻がサーバ受付より `gpsStaleSeconds`(既定 120 秒)以上古い。キャッシュ済み/固定値の位置を返す偽装アプリの典型。
+- **POSITION_REPEATED**: 前回打刻と小数点以下すべて同一の座標。実機の GPS では起こらない。
+- **GPS_ACCURACY_IMPLAUSIBLE**: 精度が `implausibleAccuracyMeters`(既定 1 m)未満。エミュレータや偽装アプリの既定値。
+- **拠点コード(動的QR)**: 拠点ごとに暗号化した TOTP シークレットを保持し、職場の表示画面(`/site-display/[id]?key=HMAC`)が 60 秒ごとに 6 桁コードと QR を表示。職員が入力/読み取りした値をサーバで検証し、`SITE_CODE_VERIFIED`(既定 -30)/`SITE_CODE_INVALID`(+40)/`SITE_CODE_MISSING`(必須拠点のみ、+30)として加減点。スコアは 0 未満にならない。表示画面の URL 鍵は `APP_SECRET` 由来の HMAC で、DB には保存しない。
+- 休憩打刻(`break_start` / `break_end`)も同じ GPS・端末・リスク判定パイプラインを通る。
+
+## 残課題(Phase 3 以降 / ネイティブアプリ)
 - Mock Location / Device Integrity / App Integrity はネイティブアプリ(Play Integrity / App Attest)からの申告値を受け付ける口のみ実装。ブラウザからは取得できない。
 - Rate Limit はアプリ層のログイン/打刻のみ。全体の L7 レート制限は Cloudflare または Caddy プラグインで補う。
 - Passkey / 外部 IdP は `AuthProvider` の追加実装で対応。

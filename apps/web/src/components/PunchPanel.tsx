@@ -12,8 +12,9 @@ type Gps = {
   capturedAt: string;
 };
 
+type PunchType = "clock_in" | "clock_out" | "break_start" | "break_end";
 type PunchResponse =
-  | { ok: true; type: "clock_in" | "clock_out"; serverTime: string; displayTime: string; displayDateTime: string; message: string; locationName: string | null }
+  | { ok: true; type: PunchType; serverTime: string; displayTime: string; displayDateTime: string; message: string; locationName: string | null }
   | { ok: false; error: { code: string; message: string } };
 
 function deviceKey(): string {
@@ -55,8 +56,18 @@ function getGps(): Promise<Gps | null> {
   });
 }
 
-export function PunchPanel(props: { initialClockedIn: boolean; initialSince: string | null; initialLocation: string | null; canPunch: boolean }) {
+export function PunchPanel(props: {
+  initialClockedIn: boolean;
+  initialOnBreak: boolean;
+  initialSince: string | null;
+  initialLocation: string | null;
+  canPunch: boolean;
+  /** Some site requires / accepts a rotating site code → show the input. */
+  siteCodeEnabled: boolean;
+}) {
   const [clockedIn, setClockedIn] = useState(props.initialClockedIn);
+  const [onBreak, setOnBreak] = useState(props.initialOnBreak);
+  const [siteCode, setSiteCode] = useState("");
   const [since, setSince] = useState(props.initialSince);
   const [location, setLocation] = useState(props.initialLocation);
   const [busy, setBusy] = useState(false);
@@ -66,13 +77,22 @@ export function PunchPanel(props: { initialClockedIn: boolean; initialSince: str
   const [now, setNow] = useState<string>("");
 
   useEffect(() => {
+    try {
+      const c = new URLSearchParams(window.location.search).get("code");
+      if (c && /^\d{6}$/.test(c)) setSiteCode(c);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
     const tick = () => setNow(new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "Asia/Tokyo" }));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
 
-  async function punch(type: "clock_in" | "clock_out") {
+  async function punch(type: PunchType) {
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -85,7 +105,7 @@ export function PunchPanel(props: { initialClockedIn: boolean; initialSince: str
       const res = await fetch("/api/attendance/punch", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ type, requestId, clientTime: new Date().toISOString(), gps, device: deviceInfo() }),
+        body: JSON.stringify({ type, requestId, clientTime: new Date().toISOString(), gps, device: deviceInfo(), siteCode: siteCode.trim() || null }),
       });
       const data = (await res.json()) as PunchResponse;
       if (!data.ok) {
@@ -93,14 +113,19 @@ export function PunchPanel(props: { initialClockedIn: boolean; initialSince: str
         return;
       }
       setResult({ message: data.message, time: data.displayTime, location: data.locationName });
+      setSiteCode("");
       if (data.type === "clock_in") {
         setClockedIn(true);
+        setOnBreak(false);
         setSince(data.displayDateTime);
         setLocation(data.locationName);
-      } else {
+      } else if (data.type === "clock_out") {
         setClockedIn(false);
+        setOnBreak(false);
         setSince(null);
         setLocation(null);
+      } else {
+        setOnBreak(data.type === "break_start");
       }
     } catch {
       setError("通信に失敗しました。電波状況を確認して再度お試しください。");
@@ -138,7 +163,7 @@ export function PunchPanel(props: { initialClockedIn: boolean; initialSince: str
         <div className="punch-status">
           <div>
             <div className="muted small">現在の状態</div>
-            <div style={{ fontWeight: 600 }}>{clockedIn ? "出勤中" : "未出勤"}</div>
+            <div style={{ fontWeight: 600 }}>{clockedIn ? (onBreak ? "休憩中" : "出勤中") : "未出勤"}</div>
             {clockedIn && since ? (
               <div className="muted small">
                 {since}
@@ -147,15 +172,30 @@ export function PunchPanel(props: { initialClockedIn: boolean; initialSince: str
             ) : null}
           </div>
         </div>
-        <div style={{ marginTop: "1rem" }}>
-          {clockedIn ? (
-            <button className="btn btn-danger btn-punch" onClick={() => punch("clock_out")} disabled={busy || !props.canPunch}>
-              {busy ? phase ?? "処理中…" : "退勤"}
-            </button>
-          ) : (
+        {props.siteCodeEnabled ? (
+          <label style={{ marginTop: ".75rem" }}>
+            拠点コード(職場の画面に表示されている6桁。QRを読み取った場合は自動入力)
+            <input inputMode="numeric" pattern="[0-9]*" maxLength={7} value={siteCode} onChange={(e) => setSiteCode(e.target.value)} placeholder="123456" />
+          </label>
+        ) : null}
+        <div style={{ marginTop: "1rem", display: "grid", gap: ".6rem" }}>
+          {!clockedIn ? (
             <button className="btn btn-accent btn-punch" onClick={() => punch("clock_in")} disabled={busy || !props.canPunch}>
               {busy ? phase ?? "処理中…" : "出勤"}
             </button>
+          ) : onBreak ? (
+            <button className="btn btn-primary btn-punch" onClick={() => punch("break_end")} disabled={busy || !props.canPunch}>
+              {busy ? phase ?? "処理中…" : "休憩終了"}
+            </button>
+          ) : (
+            <>
+              <button className="btn btn-danger btn-punch" onClick={() => punch("clock_out")} disabled={busy || !props.canPunch}>
+                {busy ? phase ?? "処理中…" : "退勤"}
+              </button>
+              <button className="btn btn-punch" style={{ padding: ".9rem", fontSize: "1.1rem" }} onClick={() => punch("break_start")} disabled={busy || !props.canPunch}>
+                休憩開始
+              </button>
+            </>
           )}
         </div>
         <p className="muted small" style={{ marginTop: ".75rem" }}>

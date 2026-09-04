@@ -15,6 +15,13 @@
       "when": 1788469050719,
       "tag": "0001_audit_log_protection",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788500140881,
+      "tag": "0002_phase2_breaks_site_code",
+      "breakpoints": true
     }
   ]
 }

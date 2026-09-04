@@ -22,6 +22,11 @@ export interface RiskSignals {
   impossibleTravelDetail?: string;
   mockLocation?: boolean | null;
   integrityFailed?: boolean | null;
+  /** Phase 2 heuristics (no native APIs required) */
+  gpsAgeSeconds?: number | null;
+  positionRepeated?: boolean;
+  /** "missing" = site requires a code but none given; "invalid" = wrong code; "verified" = correct; null = not applicable */
+  siteCode?: "missing" | "invalid" | "verified" | null;
 }
 
 export interface RiskAssessmentResult {
@@ -65,6 +70,15 @@ export function assessRisk(signals: RiskSignals, settings: RiskSettings = DEFAUL
     if (signals.accuracyMeters != null && signals.accuracyMeters > t.poorAccuracyMeters) {
       add("GPS_ACCURACY_POOR", w.gpsAccuracyPoor, `GPS精度 ${Math.round(signals.accuracyMeters)}m (閾値 ${t.poorAccuracyMeters}m)`);
     }
+    if (signals.accuracyMeters != null && signals.accuracyMeters >= 0 && signals.accuracyMeters < t.implausibleAccuracyMeters) {
+      add("GPS_ACCURACY_IMPLAUSIBLE", w.accuracyImplausible, `GPS精度 ${signals.accuracyMeters}m は実機として不自然`);
+    }
+    if (signals.gpsAgeSeconds != null && signals.gpsAgeSeconds > t.gpsStaleSeconds) {
+      add("GPS_STALE", w.gpsStale, `位置情報の取得時刻が ${Math.round(signals.gpsAgeSeconds)}秒前 (キャッシュ/固定値の疑い)`);
+    }
+    if (signals.positionRepeated) {
+      add("POSITION_REPEATED", w.positionRepeated, "前回打刻と完全に同一の座標 (偽装アプリの固定値の疑い)");
+    }
     if (signals.withinRange === false) {
       const overshoot = signals.overshootMeters ?? 0;
       if (overshoot >= t.farOutsideMeters) {
@@ -94,8 +108,13 @@ export function assessRisk(signals: RiskSignals, settings: RiskSettings = DEFAUL
   if (signals.integrityFailed) {
     add("INTEGRITY_FAILED", w.integrityFailed, "端末/アプリ整合性チェック失敗");
   }
+  if (signals.siteCode === "missing") add("SITE_CODE_MISSING", w.siteCodeMissing, "拠点コード未入力 (この拠点では必須)");
+  if (signals.siteCode === "invalid") add("SITE_CODE_INVALID", w.siteCodeInvalid, "拠点コードが一致しません");
+  if (signals.siteCode === "verified" && w.siteCodeVerified !== 0) {
+    reasons.push({ code: "SITE_CODE_VERIFIED", points: w.siteCodeVerified, detail: "拠点の動的コードを確認済み" });
+  }
 
-  const score = reasons.reduce((sum, r) => sum + r.points, 0);
+  const score = Math.max(0, reasons.reduce((sum, r) => sum + r.points, 0));
   return { score, level: levelForScore(score, t), reasons };
 }
 

@@ -10,6 +10,7 @@ export type AuditAction =
   | "auth.password_changed"
   | "attendance.clock_in"
   | "attendance.clock_out"
+  | "attendance.break"
   | "attendance.punch_rejected"
   | "attendance.request_created"
   | "attendance.request_cancelled"
