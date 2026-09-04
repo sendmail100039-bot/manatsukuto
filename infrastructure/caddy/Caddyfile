@@ -1,0 +1,16 @@
+# Caddy reverse proxy: automatic HTTPS (Let's Encrypt), HTTP->HTTPS redirect.
+# SITE_ADDRESS is the public hostname (e.g. kintai.example.com).
+# On Windows run: caddy run --config infrastructure\caddy\Caddyfile  (set SITE_ADDRESS and UPSTREAM first)
+{$SITE_ADDRESS} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	# Simple per-IP rate limiting is available through the caddy-ratelimit plugin;
+	# the application itself enforces login lockout and punch idempotency (§46, §48, §49).
+	reverse_proxy {$UPSTREAM:127.0.0.1:3000} {
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Forwarded-Host {host}
+	}
+}

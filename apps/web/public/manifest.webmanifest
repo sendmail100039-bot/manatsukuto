@@ -1,0 +1,10 @@
+{
+  "name": "勤怠システム",
+  "short_name": "勤怠",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#183d36",
+  "lang": "ja",
+  "icons": []
+}
