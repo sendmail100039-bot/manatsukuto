@@ -80,7 +80,7 @@ export function toCsv(rows: string[][]): string {
 
 export async function exportRecordsCsv(db: DbExecutor, filter: RecordFilter, actor: { userId: string } & RequestMeta) {
   const rows = await listRecords(db, filter);
-  const header = ["勤務日", "職員番号", "氏名", "部署", "拠点", "出勤", "退勤", "状態", "版", "備考"];
+  const header = ["勤務日", "職員番号", "氏名", "部署", "拠点", "出勤", "退勤", "休憩(分)", "実働(分)", "状態", "版", "備考"];
   const body = rows.map((r) => [
     r.record.workDate,
     r.employeeNumber,
@@ -89,6 +89,8 @@ export async function exportRecordsCsv(db: DbExecutor, filter: RecordFilter, act
     r.locationName ?? "",
     formatDateTime(r.record.clockInAt),
     formatDateTime(r.record.clockOutAt),
+    String(r.record.breakMinutes),
+    workedMinutes(r.record) == null ? "" : String(workedMinutes(r.record)),
     r.record.status,
     String(r.record.version),
     r.record.note ?? "",
@@ -261,6 +263,12 @@ export async function getRequestWithApprovals(db: DbExecutor, requestId: string)
 export async function recordsByIds(db: DbExecutor, ids: string[]) {
   if (!ids.length) return [];
   return db.select().from(attendanceRecords).where(inArray(attendanceRecords.id, ids));
+}
+
+/** Worked minutes = clock-out − clock-in − breaks (null while still open). */
+export function workedMinutes(r: { clockInAt: Date | null; clockOutAt: Date | null; breakMinutes: number }): number | null {
+  if (!r.clockInAt || !r.clockOutAt) return null;
+  return Math.max(0, Math.round((r.clockOutAt.getTime() - r.clockInAt.getTime()) / 60_000) - r.breakMinutes);
 }
 
 export { formatTime };

@@ -13,10 +13,13 @@
     "@platform/auth": "workspace:*",
     "@platform/core": "workspace:*",
     "@platform/database": "workspace:*",
+    "@platform/leave": "workspace:*",
     "@platform/security": "workspace:*",
+    "@platform/shift": "workspace:*",
     "@platform/ui": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "next": "^16.3.4",
+    "qrcode-generator": "2.0.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },

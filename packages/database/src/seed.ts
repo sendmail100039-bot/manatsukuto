@@ -74,6 +74,24 @@ export async function seedDatabase(db: Database, options: SeedOptions = {}) {
   }
   log("system settings seeded");
 
+  // --- default leave types & shift patterns (Phase 2) ----------------------
+  for (const lt of [
+    { code: "ANNUAL", name: "年次有給休暇", paid: true, requiresBalance: true, allowHalfDay: true },
+    { code: "SPECIAL", name: "特別休暇(慶弔等)", paid: true, requiresBalance: false, allowHalfDay: false },
+    { code: "UNPAID", name: "欠勤・無給休暇", paid: false, requiresBalance: false, allowHalfDay: true },
+  ]) {
+    await db.insert(s.leaveTypes).values(lt).onConflictDoNothing();
+  }
+  for (const sp of [
+    { code: "EARLY", name: "早番", startTime: "07:00", endTime: "16:00", breakMinutes: 60, color: "#2e7d5b" },
+    { code: "DAY", name: "日勤", startTime: "09:00", endTime: "18:00", breakMinutes: 60, color: "#175cd3" },
+    { code: "LATE", name: "遅番", startTime: "13:00", endTime: "22:00", breakMinutes: 60, color: "#b54708" },
+    { code: "NIGHT", name: "夜勤", startTime: "21:00", endTime: "07:00", breakMinutes: 120, color: "#5f6b7a" },
+  ]) {
+    await db.insert(s.shiftPatterns).values(sp).onConflictDoNothing();
+  }
+  log("leave types & shift patterns seeded");
+
   // --- initial admin -----------------------------------------------------
   const [{ count } = { count: 0 }] = await db.select({ count: sql<number>`count(*)::int` }).from(s.users);
   if (count === 0) {

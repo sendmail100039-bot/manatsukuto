@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "strict": true,
@@ -16,18 +20,54 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@platform/core": ["packages/core/src/index.ts"],
-      "@platform/core/*": ["packages/core/src/*"],
-      "@platform/auth": ["packages/auth/src/index.ts"],
-      "@platform/auth/*": ["packages/auth/src/*"],
-      "@platform/security": ["packages/security/src/index.ts"],
-      "@platform/security/*": ["packages/security/src/*"],
-      "@platform/database": ["packages/database/src/index.ts"],
-      "@platform/database/*": ["packages/database/src/*"],
-      "@platform/ui": ["packages/ui/src/index.ts"],
-      "@platform/ui/*": ["packages/ui/src/*"],
-      "@platform/attendance": ["modules/attendance/src/index.ts"],
-      "@platform/attendance/*": ["modules/attendance/src/*"]
+      "@platform/core": [
+        "packages/core/src/index.ts"
+      ],
+      "@platform/core/*": [
+        "packages/core/src/*"
+      ],
+      "@platform/auth": [
+        "packages/auth/src/index.ts"
+      ],
+      "@platform/auth/*": [
+        "packages/auth/src/*"
+      ],
+      "@platform/security": [
+        "packages/security/src/index.ts"
+      ],
+      "@platform/security/*": [
+        "packages/security/src/*"
+      ],
+      "@platform/database": [
+        "packages/database/src/index.ts"
+      ],
+      "@platform/database/*": [
+        "packages/database/src/*"
+      ],
+      "@platform/ui": [
+        "packages/ui/src/index.ts"
+      ],
+      "@platform/ui/*": [
+        "packages/ui/src/*"
+      ],
+      "@platform/attendance": [
+        "modules/attendance/src/index.ts"
+      ],
+      "@platform/attendance/*": [
+        "modules/attendance/src/*"
+      ],
+      "@platform/shift": [
+        "modules/shift/src/index.ts"
+      ],
+      "@platform/shift/*": [
+        "modules/shift/src/*"
+      ],
+      "@platform/leave": [
+        "modules/leave/src/index.ts"
+      ],
+      "@platform/leave/*": [
+        "modules/leave/src/*"
+      ]
     }
   }
 }

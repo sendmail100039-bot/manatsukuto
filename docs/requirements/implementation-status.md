@@ -23,7 +23,10 @@
 | Security | 本部専用 Security Dashboard | ✅ | `/security` (security.risk.read) |
 | Security | Security Event(確認・判定) | ✅ | `security_events`, `/security/events/[id]` |
 | Security | 一般職員への非表示 | ✅ | API は打刻結果のみ返却、画面は権限でガード |
-| Security | Mock Location / Integrity | 🔶 受け口のみ | クライアントから値が来れば加点(Phase 2 で検知強化) |
+| Security | Mock Location / Integrity(申告値) | 🔶 受け口のみ | ネイティブアプリからの申告値が来れば加点。ブラウザからは取得不可 |
+| Security | Mock Location 検知強化(Web で可能な範囲) | ✅ Phase 2 | `GPS_STALE`(古い位置情報)、`POSITION_REPEATED`(前回と完全同一座標)、`GPS_ACCURACY_IMPLAUSIBLE`(不自然に高精度) |
+| Security | 動的QR / 拠点コード | ✅ Phase 2 | 拠点ごとの TOTP(60 秒)、表示画面 `/site-display/[id]?key=…`、`SITE_CODE_*` 加減点 |
+| Attendance | 休憩管理 | ✅ Phase 2 | `attendance_breaks`、休憩開始/終了打刻、`break_minutes`、実働時間、CSV 列 |
 | Infra | HTTPS(外部通信) | ✅ | Caddy / Cloudflare Tunnel 構成 (`infrastructure/`) |
 | Infra | DB非公開 | ✅ | compose でポート非公開、`firewall.ps1` |
 | Infra | Secret管理 | ✅ | `.env`(git 管理外)、`.env.example` |
@@ -35,4 +38,9 @@
 | Auth | Brute Force 対策 / ロックアウト | ✅ | `login_attempts`, `user_credentials.locked_until` |
 | Auth | CSRF / Replay / 重複打刻 | ✅ | Origin 検査、request_id 単回使用、advisory lock、部分ユニーク索引 |
 
-凡例: ✅ 実装済 / 🔶 部分実装(Phase 2 対象)
+| Shift | シフトパターン、個別/一括登録、公開、週次グリッド、職員向け月表示 | ✅ Phase 2 | `modules/shift`, `/manager/shifts`, `/manager/shift-patterns`, `/shifts` |
+| Shift | 勤怠との突合(遅刻・早退・欠勤・シフト外) | ✅ Phase 2 | `evaluateAttendance`、勤怠一覧の「シフト突合」列、猶予分は設定 `attendance.evaluation` |
+| Leave | 休暇種別、年度別付与(0.5 日単位)、申請、承認、取消、残日数 | ✅ Phase 2 | `modules/leave`, `/leave`, `/manager/leave` |
+| Phase 2 | NFC / Beacon / Device・App Integrity / Wi-Fi 補助判定 | ⛔ 対象外(Web) | ブラウザからは NFC・Beacon・SSID・整合性 API にアクセスできないため、ネイティブアプリ化時に実装 |
+
+凡例: ✅ 実装済 / 🔶 部分実装 / ⛔ 技術的に Web では不可

@@ -2,6 +2,8 @@
 
 対象: Windows Server 2019/2022 または Windows 10/11 Pro。管理者権限の PowerShell で作業します。
 
+チェックリスト形式の手順は [deployment-checklist.md](./deployment-checklist.md) にあります。
+
 ## 1. 必要ソフトウェア
 
 ```powershell
@@ -84,14 +86,16 @@ powershell -File infrastructure\windows\firewall.ps1
 3. パスワード変更
 4. 「システム管理」から組織・部署・拠点・職員・ユーザーを登録
 
+## 5.1 拠点コード表示画面(任意)
+「勤務拠点」画面で拠点コードを「有効化」すると「表示画面」リンクが出ます。職場のタブレットや PC のブラウザでその URL を全画面表示しておくと、60 秒ごとに更新される 6 桁コードと QR が表示されます。URL には鍵が含まれるため職員には共有せず、画面だけを見せてください。
+
 ## 6. 更新手順
 ```powershell
 cd C:\apps\platform
+Stop-ScheduledTask CompanyPlatform-Web; Stop-ScheduledTask CompanyPlatform-Worker
 git pull
-pnpm install --frozen-lockfile
-pnpm db:migrate
-pnpm build
-Restart-ScheduledTask は無いので: Stop-ScheduledTask CompanyPlatform-Web; Start-ScheduledTask CompanyPlatform-Web
+powershell -ExecutionPolicy Bypass -File infrastructure\windows\setup.ps1   # install → migrate → seed(冪等) → build
+Start-ScheduledTask CompanyPlatform-Web; Start-ScheduledTask CompanyPlatform-Worker
 ```
 
 ## 7. Docker Desktop を使う場合

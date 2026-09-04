@@ -1,5 +1,6 @@
-import { listRecords } from "@platform/attendance";
+import { listRecords, workedMinutes } from "@platform/attendance";
 import { formatTime, listDepartments, toWorkDate } from "@platform/core";
+import { DAY_STATUS_LABEL, evaluateAttendance } from "@platform/shift";
 import { db } from "@/lib/db";
 import { managerScope } from "@/lib/scope";
 import { requirePermissionPage } from "@/lib/session";
@@ -17,6 +18,9 @@ export default async function ManagerAttendancePage({ searchParams }: { searchPa
   const scope = await managerScope(p);
   const departments = await listDepartments(db(), scope.organizationId);
   const rows = await listRecords(db(), { from, to, departmentId: sp.departmentId || undefined, ...scope });
+  const evals = await evaluateAttendance(db(), { from, to, departmentId: sp.departmentId || undefined, ...scope });
+  const evalByRecord = new Map(evals.filter((e) => e.recordId).map((e) => [e.recordId!, e]));
+  const absences = evals.filter((e) => e.status === "absent");
   const canExport = p.permissions.has("attendance.export");
   const query = new URLSearchParams({ from, to, ...(sp.departmentId ? { departmentId: sp.departmentId } : {}) }).toString();
   return (
@@ -52,6 +56,16 @@ export default async function ManagerAttendancePage({ searchParams }: { searchPa
           ) : null}
         </div>
       </form>
+      {absences.length ? (
+        <div className="alert alert-error">
+          シフトがあるのに打刻がない日: {absences.length} 件(
+          {absences
+            .slice(0, 5)
+            .map((a) => `${a.workDate}`)
+            .join(", ")}
+          {absences.length > 5 ? " …" : ""})
+        </div>
+      ) : null}
       <div className="card table-wrap">
         <p className="muted small">{rows.length} 件</p>
         <table>
@@ -64,7 +78,10 @@ export default async function ManagerAttendancePage({ searchParams }: { searchPa
               <th>拠点</th>
               <th>出勤</th>
               <th>退勤</th>
+              <th>休憩</th>
+              <th>実働</th>
               <th>状態</th>
+              <th>シフト突合</th>
             </tr>
           </thead>
           <tbody>
@@ -77,9 +94,25 @@ export default async function ManagerAttendancePage({ searchParams }: { searchPa
                 <td>{r.locationName ?? "—"}</td>
                 <td>{formatTime(r.record.clockInAt) || "—"}</td>
                 <td>{formatTime(r.record.clockOutAt) || "—"}</td>
+                <td>{r.record.breakMinutes ? `${r.record.breakMinutes}分` : "—"}</td>
+                <td>{workedMinutes(r.record) == null ? "—" : `${Math.floor(workedMinutes(r.record)! / 60)}:${String(workedMinutes(r.record)! % 60).padStart(2, "0")}`}</td>
                 <td>
                   {r.record.status === "open" ? <span className="badge badge-warn">出勤中</span> : <span className="badge badge-ok">完了</span>}
                   {r.record.version > 1 ? <span className="badge badge-muted"> v{r.record.version}</span> : null}
+                </td>
+                <td>
+                  {(() => {
+                    const e = evalByRecord.get(r.record.id);
+                    if (!e) return <span className="muted">—</span>;
+                    const cls = e.status === "on_time" || e.status === "open" ? "badge-ok" : e.status === "unscheduled" ? "badge-muted" : "badge-warn";
+                    return (
+                      <span className={`badge ${cls}`}>
+                        {DAY_STATUS_LABEL[e.status]}
+                        {e.lateMinutes ? ` +${e.lateMinutes}分` : ""}
+                        {e.earlyLeaveMinutes ? ` -${e.earlyLeaveMinutes}分` : ""}
+                      </span>
+                    );
+                  })()}
                 </td>
               </tr>
             ))}

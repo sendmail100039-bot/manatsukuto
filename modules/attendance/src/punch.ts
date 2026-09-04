@@ -1,5 +1,6 @@
-import { and, desc, eq, isNotNull, lt, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, isNull, lt, sql } from "drizzle-orm";
 import {
+  attendanceBreaks,
   attendanceEvents,
   attendanceRecords,
   employees,
@@ -27,9 +28,19 @@ import {
   nearestLocation,
   persistAssessment,
   resolveRiskSettings,
+  verifySiteCode,
   type GeofenceResult,
   type ImpossibleTravelResult,
 } from "@platform/security";
+
+export type PunchType = "clock_in" | "clock_out" | "break_start" | "break_end";
+const PUNCH_TYPES: PunchType[] = ["clock_in", "clock_out", "break_start", "break_end"];
+const MESSAGES: Record<PunchType, string> = {
+  clock_in: "出勤しました",
+  clock_out: "退勤しました",
+  break_start: "休憩を開始しました",
+  break_end: "休憩を終了しました",
+};
 
 export interface GpsReading {
   latitude: number;
@@ -44,7 +55,7 @@ export interface GpsReading {
 }
 
 export interface PunchInput {
-  type: "clock_in" | "clock_out";
+  type: PunchType;
   /** Client-generated UUID; the same id is never accepted twice (§48, §49). */
   requestId: string;
   clientTime: string; // ISO timestamp from the device
@@ -52,13 +63,15 @@ export interface PunchInput {
   device: DeviceInfo;
   locationId?: string | null;
   integrity?: unknown;
+  /** Rotating 6-digit site code shown at the workplace (Phase 2 動的QR). */
+  siteCode?: string | null;
 }
 
 /** What a *general employee* is allowed to see (§23): no risk information at all. */
 export interface PunchResult {
   ok: true;
   eventId: string;
-  type: "clock_in" | "clock_out";
+  type: PunchType;
   serverTime: Date;
   workDate: string;
   locationName: string | null;
@@ -79,7 +92,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-
 export async function recordPunch(db: Database, principal: Principal, input: PunchInput, meta: RequestMeta): Promise<PunchResult> {
   if (!principal.employeeId) throw new ValidationError("このユーザーには職員情報が紐づいていません");
   if (!principal.permissions.has("attendance.self.punch")) throw new ValidationError("打刻権限がありません");
-  if (input.type !== "clock_in" && input.type !== "clock_out") throw new ValidationError("打刻種別が不正です");
+  if (!PUNCH_TYPES.includes(input.type)) throw new ValidationError("打刻種別が不正です");
   if (!UUID_RE.test(input.requestId ?? "")) throw new ValidationError("requestId が不正です");
 
   const serverTime = new Date();
@@ -126,9 +139,19 @@ export async function recordPunch(db: Database, principal: Principal, input: Pun
     if (input.type === "clock_in" && openRecord) {
       throw new ConflictError("すでに出勤中です。先に退勤してください。", { code: "ALREADY_CLOCKED_IN" });
     }
-    if (input.type === "clock_out" && !openRecord) {
+    if (input.type !== "clock_in" && !openRecord) {
       throw new ConflictError("出勤記録がありません。先に出勤してください。", { code: "NOT_CLOCKED_IN" });
     }
+    const [openBreak] = openRecord
+      ? await tx
+          .select()
+          .from(attendanceBreaks)
+          .where(and(eq(attendanceBreaks.recordId, openRecord.id), isNull(attendanceBreaks.endedAt)))
+          .limit(1)
+      : [];
+    if (input.type === "break_start" && openBreak) throw new ConflictError("すでに休憩中です。", { code: "ALREADY_ON_BREAK" });
+    if (input.type === "break_end" && !openBreak) throw new ConflictError("休憩中ではありません。", { code: "NOT_ON_BREAK" });
+    if (input.type === "clock_out" && openBreak) throw new ConflictError("休憩中です。先に休憩を終了してください。", { code: "ON_BREAK" });
 
     // --- device ---------------------------------------------------------------
     const { device, isNew } = await touchDevice(tx, employeeId, input.device, {
@@ -161,6 +184,29 @@ export async function recordPunch(db: Database, principal: Principal, input: Pun
     if (!targetLocation && employee.primaryLocationId) {
       targetLocation = activeLocations.find((l) => l.id === employee.primaryLocationId) ?? null;
       if (targetLocation && gps) geofence = checkGeofence(gps, targetLocation);
+    }
+
+    // --- site code (dynamic QR) ------------------------------------------------
+    // A valid rotating code proves presence at that site more strongly than GPS,
+    // so when the code matches another active site, that site becomes the target.
+    let siteCodeStatus: "missing" | "invalid" | "verified" | null = null;
+    const givenCode = (input.siteCode ?? "").trim();
+    if (givenCode) {
+      const verifiedSite =
+        (targetLocation?.siteCodeSecret && verifySiteCode(targetLocation.siteCodeSecret, givenCode, serverTime.getTime()) ? targetLocation : null) ??
+        activeLocations.find((l) => l.siteCodeSecret && verifySiteCode(l.siteCodeSecret, givenCode, serverTime.getTime())) ??
+        null;
+      if (verifiedSite) {
+        siteCodeStatus = "verified";
+        if (verifiedSite.id !== targetLocation?.id) {
+          targetLocation = verifiedSite;
+          geofence = gps ? checkGeofence(gps, verifiedSite) : null;
+        }
+      } else {
+        siteCodeStatus = "invalid";
+      }
+    } else if (targetLocation?.siteCodeSecret && targetLocation.siteCodeRequired) {
+      siteCodeStatus = "missing";
     }
 
     // --- previous punch for impossible travel ---------------------------------
@@ -203,10 +249,11 @@ export async function recordPunch(db: Database, principal: Principal, input: Pun
         ipAddress: meta.ipAddress ?? null,
         userAgent: meta.userAgent?.slice(0, 512) ?? null,
         requestId: input.requestId,
+        siteCodeVerified: siteCodeStatus === null ? null : siteCodeStatus === "verified",
       })
       .returning();
 
-    // --- record ---------------------------------------------------------------
+    // --- record / breaks --------------------------------------------------------
     const workDate = input.type === "clock_in" ? toWorkDate(serverTime) : openRecord!.workDate;
     if (input.type === "clock_in") {
       await tx.insert(attendanceRecords).values({
@@ -217,6 +264,15 @@ export async function recordPunch(db: Database, principal: Principal, input: Pun
         clockInAt: serverTime,
         status: "open",
       });
+    } else if (input.type === "break_start") {
+      await tx.insert(attendanceBreaks).values({ recordId: openRecord!.id, employeeId, startEventId: event!.id, startedAt: serverTime });
+    } else if (input.type === "break_end") {
+      await tx.update(attendanceBreaks).set({ endEventId: event!.id, endedAt: serverTime }).where(eq(attendanceBreaks.id, openBreak!.id));
+      const minutes = Math.round((serverTime.getTime() - openBreak!.startedAt.getTime()) / 60_000);
+      await tx
+        .update(attendanceRecords)
+        .set({ breakMinutes: sql`${attendanceRecords.breakMinutes} + ${minutes}`, updatedAt: new Date() })
+        .where(eq(attendanceRecords.id, openRecord!.id));
     } else {
       await tx
         .update(attendanceRecords)
@@ -237,6 +293,14 @@ export async function recordPunch(db: Database, principal: Principal, input: Pun
         impossibleTravel: travel?.impossible ?? false,
         impossibleTravelDetail: travel ? `${(travel.distanceMeters / 1000).toFixed(1)}km を ${travel.elapsedSeconds}秒で移動 (${Math.round(travel.speedKmh)}km/h)` : undefined,
         mockLocation: gps?.mockLocation ?? null,
+        gpsAgeSeconds: gps?.capturedAt && !Number.isNaN(new Date(gps.capturedAt).getTime()) ? (serverTime.getTime() - new Date(gps.capturedAt).getTime()) / 1000 : null,
+        positionRepeated:
+          !!gps &&
+          !!previous &&
+          previous.latitude === gps.latitude &&
+          previous.longitude === gps.longitude &&
+          serverTime.getTime() - previous.serverTime.getTime() >= riskSettings.thresholds.positionRepeatedMinIntervalSeconds * 1000,
+        siteCode: siteCodeStatus,
         integrityFailed: !!input.integrity && typeof input.integrity === "object" && (input.integrity as { failed?: boolean }).failed === true,
       },
       riskSettings,
@@ -271,10 +335,10 @@ export async function recordPunch(db: Database, principal: Principal, input: Pun
       ...meta,
       actorUserId: principal.userId,
       actorEmployeeId: employeeId,
-      action: input.type === "clock_in" ? "attendance.clock_in" : "attendance.clock_out",
+      action: input.type === "clock_in" ? "attendance.clock_in" : input.type === "clock_out" ? "attendance.clock_out" : "attendance.break",
       targetType: "attendance_event",
       targetId: event!.id,
-      details: { locationId: targetLocation?.id ?? null, withinRange: geofence?.withinRange ?? null },
+      details: { type: input.type, locationId: targetLocation?.id ?? null, withinRange: geofence?.withinRange ?? null, siteCode: siteCodeStatus },
     });
 
     return {
@@ -284,7 +348,7 @@ export async function recordPunch(db: Database, principal: Principal, input: Pun
       serverTime,
       workDate,
       locationName: targetLocation?.name ?? null,
-      message: input.type === "clock_in" ? "出勤しました" : "退勤しました",
+      message: MESSAGES[input.type],
     };
   });
 }
@@ -305,5 +369,18 @@ export async function getPunchState(db: Database, employeeId: string) {
     .where(and(eq(attendanceRecords.employeeId, employeeId), sql`${attendanceRecords.status} <> 'superseded'`))
     .orderBy(desc(attendanceRecords.createdAt))
     .limit(1);
-  return { clockedIn: !!openRecord, open: openRecord ?? null, last: last ?? null };
+  const [openBreak] = openRecord
+    ? await db
+        .select()
+        .from(attendanceBreaks)
+        .where(and(eq(attendanceBreaks.recordId, openRecord.record.id), isNull(attendanceBreaks.endedAt)))
+        .limit(1)
+    : [];
+  return {
+    clockedIn: !!openRecord,
+    onBreak: !!openBreak,
+    breakStartedAt: openBreak?.startedAt ?? null,
+    open: openRecord ?? null,
+    last: last ?? null,
+  };
 }

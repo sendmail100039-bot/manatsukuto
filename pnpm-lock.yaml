@@ -44,9 +44,15 @@ importers:
       '@platform/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@platform/leave':
+        specifier: workspace:*
+        version: link:../../modules/leave
       '@platform/security':
         specifier: workspace:*
         version: link:../../packages/security
+      '@platform/shift':
+        specifier: workspace:*
+        version: link:../../modules/shift
       '@platform/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -56,6 +62,9 @@ importers:
       next:
         specifier: ^16.3.4
         version: 16.3.4(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      qrcode-generator:
+        specifier: 2.0.4
+        version: 2.0.4
       react:
         specifier: ^19.2.8
         version: 19.2.8
@@ -112,6 +121,30 @@ importers:
         specifier: ^0.45.2
         version: 0.45.2(postgres@3.4.9)
 
+  modules/leave:
+    dependencies:
+      '@platform/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@platform/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(postgres@3.4.9)
+
+  modules/shift:
+    dependencies:
+      '@platform/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@platform/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(postgres@3.4.9)
+
   packages/auth:
     dependencies:
       '@platform/core':
@@ -154,6 +187,9 @@ importers:
 
   packages/security:
     dependencies:
+      '@platform/auth':
+        specifier: workspace:*
+        version: link:../auth
       '@platform/database':
         specifier: workspace:*
         version: link:../database
@@ -1307,6 +1343,9 @@ packages:
     resolution: {integrity: sha512-GD3qdB0x1z9xgFI6cdRD6xu2Sp2WCOEoe3mtnyB5Ee0XrrL5Pe+e4CCnJrRMnL1zYtRDZmQQVbvOttLnKDLnaw==}
     engines: {node: '>=12'}
 
+  qrcode-generator@2.0.4:
+    resolution: {integrity: sha512-mZSiP6RnbHl4xL2Ap5HfkjLnmxfKcPWpWe/c+5XxCuetEenqmNFf1FH/ftXPCtFG5/TDobjsjz6sSNL0Sr8Z9g==}
+
   react-dom@19.2.8:
     resolution: {integrity: sha512-rVprimfGBG3DR+Tq0IQG2DT5PxKth1WIGDmj5yPmlzr4YBe7uyE+Du4oVqTDXZSHGGGXRtTJEGSSePyQCMBglQ==}
     peerDependencies:
@@ -2221,6 +2260,8 @@ snapshots:
       source-map-js: 1.2.1
 
   postgres@3.4.9: {}
+
+  qrcode-generator@2.0.4: {}
 
   react-dom@19.2.8(react@19.2.8):
     dependencies:
